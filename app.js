@@ -1,0 +1,199 @@
+// Add new objects here to grow this starter word bank toward 2,000 words.
+const WORDS = [
+  ['evidence','/ˈevɪdəns/','证据；依据','The author provides evidence to support her claim.','作者提供证据来支持她的观点。','RLA',1],
+  ['claim','/kleɪm/','主张；声称','Which claim is best supported by the passage?','哪一项主张最得到文章支持？','RLA',1],
+  ['analyze','/ˈænəlaɪz/','分析','Students must analyze the chart before answering.','学生必须在回答前分析图表。','RLA',1],
+  ['infer','/ɪnˈfɜːr/','推断','What can the reader infer from the speaker’s words?','读者能从说话者的话中推断出什么？','RLA',2],
+  ['relevant','/ˈreləvənt/','相关的；切题的','Choose details that are relevant to the main idea.','选择与中心思想相关的细节。','RLA',2],
+  ['significant','/sɪɡˈnɪfɪkənt/','重要的；显著的','The law brought significant changes to voting rights.','这项法律给投票权带来了重大改变。','RLA',2],
+  ['establish','/ɪˈstæblɪʃ/','建立；确立；证明','The data establish a clear connection between the two events.','数据证明了这两个事件之间存在明确联系。','RLA',2],
+  ['contrast','/kənˈtræst/','对比；差异','The writer contrasts city life with country life.','作者将城市生活与乡村生活作对比。','RLA',1],
+  ['perspective','/pərˈspektɪv/','观点；角度','The article presents the issue from a student’s perspective.','文章从学生的角度呈现这个问题。','RLA',2],
+  ['conclude','/kənˈkluːd/','得出结论','From the evidence, we can conclude that the plan worked.','根据证据，我们可以得出该计划有效的结论。','RLA',1],
+  ['summarize','/ˈsʌməraɪz/','总结；概述','Summarize the author’s main argument in one sentence.','用一句话总结作者的主要论点。','RLA',1],
+  ['bias','/ˈbaɪəs/','偏见；倾向','The reader should look for bias in the news report.','读者应在新闻报道中寻找偏见。','RLA',3],
+  ['illustrate','/ˈɪləstreɪt/','说明；阐明','This example illustrates why the policy was needed.','这个例子说明了为何需要这项政策。','RLA',2],
+  ['consequence','/ˈkɑːnsɪkwens/','结果；后果','One consequence of the storm was a loss of electricity.','暴风雨的一个后果是停电。','RLA',2],
+  ['interpret','/ɪnˈtɜːrprət/','解释；理解','Use the graph to interpret the change in population.','使用图表来解释人口变化。','RLA',2],
+  ['organism','/ˈɔːrɡənɪzəm/','生物；有机体','Every organism needs energy to survive.','每个生物都需要能量来生存。','Science',1],
+  ['cell','/sel/','细胞','The cell is the basic unit of life.','细胞是生命的基本单位。','Science',1],
+  ['variable','/ˈveriəbəl/','变量；可变因素','In this experiment, temperature is the variable being tested.','在这个实验中，温度是正在测试的变量。','Science',2],
+  ['observe','/əbˈzɜːrv/','观察','Scientists observe the plants every day.','科学家每天观察这些植物。','Science',1],
+  ['hypothesis','/haɪˈpɑːθəsɪs/','假设','The students tested their hypothesis with an experiment.','学生用实验检验他们的假设。','Science',2],
+  ['adapt','/əˈdæpt/','适应；调整','Some animals adapt to cold weather by growing thicker fur.','有些动物通过长出更厚的皮毛来适应寒冷天气。','Science',2],
+  ['process','/ˈprɑːses/','过程；步骤','Photosynthesis is the process plants use to make food.','光合作用是植物制造食物的过程。','Science',1],
+  ['environment','/ɪnˈvaɪrənmənt/','环境','Pollution can harm the environment.','污染会伤害环境。','Science',1],
+  ['energy','/ˈenərdʒi/','能量','Food gives the body energy.','食物为身体提供能量。','Science',1],
+  ['density','/ˈdensəti/','密度','Oil has a lower density than water, so it floats.','油的密度低于水，因此会浮在水面上。','Science',3],
+  ['react','/riˈækt/','反应；起反应','When the two chemicals react, a gas is produced.','当这两种化学物质发生反应时，会产生气体。','Science',2],
+  ['structure','/ˈstrʌktʃər/','结构；构造','The structure of a bird’s beak helps it find food.','鸟喙的结构帮助它寻找食物。','Science',2],
+  ['evolve','/ɪˈvɑːlv/','进化；逐渐发展','Species evolve over many generations.','物种经过许多代进化。','Science',3],
+  ['factor','/ˈfæktər/','因素','Rainfall is an important factor in plant growth.','降雨量是植物生长的重要因素。','Science',1],
+  ['data','/ˈdeɪtə/','数据','The data show that the number of visitors increased.','数据显示游客数量增加了。','Science',1],
+  ['democracy','/dɪˈmɑːkrəsi/','民主；民主制度','In a democracy, citizens can vote for their leaders.','在民主制度中，公民可以投票选举领导人。','Social Studies',1],
+  ['citizen','/ˈsɪtɪzən/','公民','Every citizen has rights and responsibilities.','每一位公民都有权利和责任。','Social Studies',1],
+  ['amendment','/əˈmendmənt/','修正案','The First Amendment protects freedom of speech.','美国宪法第一修正案保护言论自由。','Social Studies',2],
+  ['economy','/ɪˈkɑːnəmi/','经济','A strong economy can create more jobs.','强劲的经济可以创造更多工作机会。','Social Studies',1],
+  ['resource','/ˈriːsɔːrs/','资源','Water is a natural resource that communities need.','水是社区需要的自然资源。','Social Studies',1],
+  ['prohibit','/proʊˈhɪbɪt/','禁止','The rule prohibits smoking inside the building.','该规定禁止在建筑物内吸烟。','Social Studies',3],
+  ['legislation','/ˌledʒɪsˈleɪʃən/','立法；法律','The new legislation changed how schools receive funding.','新立法改变了学校获得资金的方式。','Social Studies',3],
+  ['migrate','/ˈmaɪɡreɪt/','迁移；移居','Many families migrate to cities to find work.','许多家庭迁移到城市寻找工作。','Social Studies',2],
+  ['conflict','/ˈkɑːnflɪkt/','冲突；矛盾','The conflict ended after both groups reached an agreement.','两个团体达成协议后，冲突结束了。','Social Studies',2],
+  ['policy','/ˈpɑːləsi/','政策','The city created a policy to reduce traffic.','城市制定了一项减少交通的政策。','Social Studies',2],
+  ['income','/ˈɪnkʌm/','收入','Her income increased after she received a promotion.','她升职后收入增加了。','Social Studies',1],
+  ['labor','/ˈleɪbər/','劳动；劳工','Labor laws protect workers from unsafe conditions.','劳动法保护工人免受不安全工作条件的影响。','Social Studies',2],
+  ['participate','/pɑːrˈtɪsəpeɪt/','参加；参与','People can participate in local government meetings.','人们可以参加地方政府会议。','Social Studies',2],
+  ['impact','/ˈɪmpækt/','影响','The railroad had a major impact on trade.','铁路对贸易产生了重大影响。','Social Studies',1],
+  ['authority','/əˈθɔːrəti/','权力；官方机构','The local authority is responsible for public safety.','地方当局负责公共安全。','Social Studies',2],
+  ['equation','/ɪˈkweɪʒən/','方程；等式','Solve the equation to find the value of x.','解这个方程，求出 x 的值。','Math',1]
+].map(([word,ipa,meaning,exampleEn,exampleZh,category,level], i) => ({id:i+1,word,ipa,meaning,exampleEn,exampleZh,category,level}));
+
+// The full offline expansion is loaded before this file. Keeping it separate
+// makes the starter core easy to edit while preserving a self-contained app.
+if (Array.isArray(window.GED_FULL_VOCABULARY)) {
+  const existing = new Set(WORDS.map(item => item.word.toLowerCase()));
+  window.GED_FULL_VOCABULARY.forEach(item => {
+    if (!existing.has(item.word.toLowerCase())) {
+      WORDS.push({id: WORDS.length + 1, ...item});
+      existing.add(item.word.toLowerCase());
+    }
+  });
+}
+
+const SYNC_CONFIG = window.GED_SYNC_CONFIG || {};
+const SYNC_TABLE = SYNC_CONFIG.table || 'ged_vocabulary_progress';
+
+const STORAGE_KEY = 'ged-vocabulary-progress-v1';
+const today = () => new Date().toISOString().slice(0,10);
+const defaultState = () => ({goal:10, records:{}, studiedByDay:{}, newSubjectsByDay:{}, reviews:0, studyMode:'mixed', syncCode:'', updatedAt:0});
+const load = () => { try { const saved = JSON.parse(localStorage.getItem(STORAGE_KEY)); return {...defaultState(), ...(saved || {}), records:saved?.records || {}, studiedByDay:saved?.studiedByDay || {}, newSubjectsByDay:saved?.newSubjectsByDay || {}}; } catch { return defaultState(); } };
+let state = load(), current = null, answerShown = false;
+const $ = id => document.getElementById(id);
+const persistLocal = () => localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+const save = () => { state.updatedAt=Date.now(); persistLocal(); scheduleSync(); };
+const datePlus = days => { const d = new Date(); d.setDate(d.getDate()+days); return d.toISOString().slice(0,10); };
+const learnedIds = () => Object.keys(state.records);
+const dueWords = () => WORDS.filter(w => state.records[w.id] && state.records[w.id].nextReview <= today());
+const todayNew = () => state.studiedByDay[today()] || 0;
+const intervals = {forgot:1, unsure:3, known:4};
+const MIXED_SEQUENCE = ['RLA','Math','RLA','Science','RLA','Math','RLA','Social Studies','RLA','Science'];
+const modeLabel = () => ({mixed:'四科混合', RLA:'专攻 RLA', Math:'专攻 Math', Science:'专攻 Science', 'Social Studies':'专攻 Social Studies'})[state.studyMode] || '四科混合';
+const activeMode = () => ['mixed','RLA','Math','Science','Social Studies'].includes(state.studyMode) ? state.studyMode : 'mixed';
+let syncMessage = '', syncTimer;
+
+function syncReady(){ return Boolean(SYNC_CONFIG.supabaseUrl && SYNC_CONFIG.supabaseAnonKey); }
+function normalizedSyncCode(code){ return code.toUpperCase().replace(/[^A-Z0-9]/g,'').replace(/^(.{3})(.*)$/,'$1-$2'); }
+function makeSyncCode(){
+  const bytes=new Uint8Array(16); crypto.getRandomValues(bytes);
+  return 'GED-'+Array.from(bytes, byte=>byte.toString(16).padStart(2,'0')).join('').toUpperCase();
+}
+function syncHeaders(){ return {apikey:SYNC_CONFIG.supabaseAnonKey, Authorization:`Bearer ${SYNC_CONFIG.supabaseAnonKey}`, 'Content-Type':'application/json', 'X-Sync-Key':state.syncCode}; }
+function syncEndpoint(){ return `${SYNC_CONFIG.supabaseUrl.replace(/\/$/,'')}/rest/v1/${encodeURIComponent(SYNC_TABLE)}`; }
+function updateSyncUI(){
+  const ready=syncReady(), connected=Boolean(state.syncCode);
+  $('syncCode').value=state.syncCode || '';
+  $('connectSync').disabled=!ready; $('syncNow').disabled=!ready || !connected;
+  $('syncStatus').textContent=syncMessage || (ready ? (connected ? '等待同步' : '需要同步码') : '离线保存中');
+  $('syncHelp').textContent=ready ? (connected ? '进度会在每次学习后自动同步；你也可以随时点击“立即同步”。' : '首次使用：在一台设备生成同步码，再在另一台设备输入同一串码。') : '尚未连接同步服务；学习记录仍安全保存在当前浏览器。';
+}
+function recordWinner(localRecord, remoteRecord){
+  if(!localRecord) return remoteRecord; if(!remoteRecord) return localRecord;
+  const localTime=Number(localRecord.updatedAt || 0), remoteTime=Number(remoteRecord.updatedAt || 0);
+  if(localTime || remoteTime) return remoteTime > localTime ? remoteRecord : localRecord;
+  if((remoteRecord.knownCount || 0) !== (localRecord.knownCount || 0)) return (remoteRecord.knownCount || 0) > (localRecord.knownCount || 0) ? remoteRecord : localRecord;
+  return String(remoteRecord.nextReview || '') > String(localRecord.nextReview || '') ? remoteRecord : localRecord;
+}
+function mergeProgress(local, remote){
+  const merged={...defaultState(), ...remote, syncCode:local.syncCode, studyMode:local.studyMode, goal:local.goal};
+  merged.records={};
+  new Set([...Object.keys(remote.records || {}), ...Object.keys(local.records || {})]).forEach(id=>merged.records[id]=recordWinner(local.records?.[id],remote.records?.[id]));
+  merged.studiedByDay={...remote.studiedByDay};
+  Object.entries(local.studiedByDay || {}).forEach(([day,count])=>merged.studiedByDay[day]=Math.max(merged.studiedByDay[day] || 0,count));
+  merged.newSubjectsByDay={...remote.newSubjectsByDay};
+  Object.entries(local.newSubjectsByDay || {}).forEach(([day,items])=>{ if((items || []).length >= (merged.newSubjectsByDay[day] || []).length) merged.newSubjectsByDay[day]=items; });
+  merged.reviews=Math.max(local.reviews || 0,remote.reviews || 0);
+  merged.updatedAt=Math.max(local.updatedAt || 0,remote.updatedAt || 0);
+  return merged;
+}
+function syncPayload(){ const {syncCode,...payload}=state; return payload; }
+function scheduleSync(){
+  if(!syncReady() || !state.syncCode) return;
+  clearTimeout(syncTimer); syncTimer=setTimeout(pushProgress,900);
+}
+async function pushProgress(){
+  if(!syncReady() || !state.syncCode) return;
+  try{
+    syncMessage='正在同步…'; updateSyncUI();
+    const response=await fetch(`${syncEndpoint()}?on_conflict=sync_key`,{method:'POST',headers:{...syncHeaders(),Prefer:'resolution=merge-duplicates,return=minimal'},body:JSON.stringify({sync_key:state.syncCode,payload:syncPayload(),updated_at:new Date().toISOString()})});
+    if(!response.ok) throw new Error(`同步失败 (${response.status})`);
+    syncMessage=`已同步 ${new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}`; updateSyncUI();
+  }catch(error){ syncMessage=error.message || '同步失败，请稍后重试'; updateSyncUI(); }
+}
+async function pullProgress(){
+  if(!syncReady() || !state.syncCode) return;
+  try{
+    syncMessage='正在读取进度…'; updateSyncUI();
+    const response=await fetch(`${syncEndpoint()}?sync_key=eq.${encodeURIComponent(state.syncCode)}&select=payload`,{headers:syncHeaders()});
+    if(!response.ok) throw new Error(`读取失败 (${response.status})`);
+    const rows=await response.json();
+    if(rows[0]?.payload){ state=mergeProgress(state,rows[0].payload); persistLocal(); updateDashboard(); }
+    await pushProgress();
+  }catch(error){ syncMessage=error.message || '同步失败，请稍后重试'; updateSyncUI(); }
+}
+
+function updateDashboard(){
+  const learned = learnedIds().length, mastered = Object.values(state.records).filter(r=>r.knownCount>0).length, due = dueWords().length, done=todayNew();
+  $('dailyGoal').value=state.goal; $('goalNumber').textContent=state.goal; $('goalText').textContent=`今天已学习 ${done} / ${state.goal} 个新词`;
+  $('goalProgress').style.width=Math.min(100,done/state.goal*100)+'%'; $('dueCount').textContent=due; $('masteredCount').textContent=mastered;
+  $('learnedStat').textContent=learned; $('totalWords').textContent=WORDS.length; $('masteryRate').textContent=learned ? Math.round(mastered/learned*100)+'%' : '0%'; $('reviewStat').textContent=state.reviews||0;
+  $('wordBankCount').textContent=`当前词库 ${WORDS.length} 个词（可继续扩充）`;
+  $('studyMode').value=activeMode();
+  $('modeDescription').textContent=activeMode()==='mixed' ? '默认四科混合：每 10 个新词为 RLA 5、Math 2、Science 2、Social Studies 1。' : `${modeLabel()}：新增词只从该科推送；所有科目的到期复习仍会优先显示。`;
+  updateSyncUI();
+  const cats=['RLA','Math','Science','Social Studies'];
+  $('categoryProgress').innerHTML=cats.map(c=>{const total=WORDS.filter(w=>w.category===c).length, count=WORDS.filter(w=>w.category===c&&state.records[w.id]).length; return `<div class="category-line"><span>${c}</span><div class="progress-track"><div class="progress-fill" style="width:${count/total*100}%"></div></div><em>${count}/${total}</em></div>`}).join('');
+}
+function chooseNewWord(){
+  const mode=activeMode(), sequence=mode==='mixed' ? MIXED_SEQUENCE : [mode];
+  const history=state.newSubjectsByDay[today()] || [];
+  const position=Math.max(history.length, todayNew());
+  for(let offset=0; offset<sequence.length; offset++){
+    const category=sequence[(position+offset)%sequence.length];
+    const candidate=WORDS.filter(w=>w.category===category&&!state.records[w.id]).sort((a,b)=>a.level-b.level||a.id-b.id)[0];
+    if(candidate) return candidate;
+  }
+  return WORDS.filter(w=>!state.records[w.id]).sort((a,b)=>a.level-b.level||a.id-b.id)[0] || null;
+}
+function chooseNext(){
+  const due=dueWords(); if(due.length) return due.sort((a,b)=>state.records[a.id].nextReview.localeCompare(state.records[b.id].nextReview))[0];
+  if(todayNew()>=state.goal) return null;
+  return chooseNewWord();
+}
+function showCard(word){
+  current=word; answerShown=false; $('answer').classList.add('hidden'); $('ratingButtons').classList.add('hidden'); $('showAnswer').classList.remove('hidden'); $('startButton').classList.add('hidden');
+  if(!word){$('word').textContent=learnedIds().length===WORDS.length?'首批词库已全部学习！':'准备开始今天的学习'; $('prompt').textContent=dueWords().length?'有待复习的词，点击按钮开始巩固。':'每次先想意思，再显示答案。'; $('cardTag').textContent='GED'; $('cardDifficulty').textContent='学习模式'; $('speakButton').disabled=true; $('showAnswer').classList.add('hidden'); $('startButton').classList.remove('hidden'); $('startButton').textContent=dueWords().length?'开始复习':'开始今天的学习'; $('sessionTitle').textContent='准备开始'; return;}
+  $('word').textContent=word.word; $('ipa').textContent=word.ipa; $('meaning').textContent=word.meaning; $('exampleEn').textContent=word.exampleEn; $('exampleZh').textContent=word.exampleZh; $('cardTag').textContent=word.category; $('cardDifficulty').textContent='Level '+word.level; $('speakButton').disabled=false;
+  const isDue=!!state.records[word.id] && state.records[word.id].nextReview<=today(); $('sessionTitle').textContent=isDue?'复习时间':'学习新词'; $('prompt').textContent='先想一想它的意思，再显示答案。';
+}
+function start(){ showCard(chooseNext()); }
+function rate(rating){
+  if(!current) return; const old=state.records[current.id]; const isNew=!old; const knownStreak=rating==='known'?(old?.knownStreak||0)+1:0;
+  let days=intervals[rating]; if(rating==='known' && knownStreak>1) days=Math.min(60,4*Math.pow(2,knownStreak-1));
+  state.records[current.id]={nextReview:datePlus(days),knownCount:(old?.knownCount||0)+(rating==='known'?1:0),knownStreak, lastRating:rating,updatedAt:Date.now()};
+  if(isNew){ state.studiedByDay[today()]=todayNew()+1; (state.newSubjectsByDay[today()] ||= []).push(current.category); } state.reviews=(state.reviews||0)+1; save(); updateDashboard(); showCard(chooseNext());
+}
+function reveal(){if(!current)return; answerShown=true; $('answer').classList.remove('hidden'); $('showAnswer').classList.add('hidden'); $('ratingButtons').classList.remove('hidden');}
+function renderWords(){const q=$('searchInput').value.trim().toLowerCase(), cat=$('categoryFilter').value, level=$('levelFilter').value; const list=WORDS.filter(w=>(!q||`${w.word} ${w.meaning}`.toLowerCase().includes(q))&&(cat==='all'||w.category===cat)&&(level==='all'||w.level===+level)); $('wordList').innerHTML=list.length?list.map(w=>`<article class="word-row"><div><h3>${w.word}</h3><p class="ipa">${w.ipa}</p></div><div><p><b>${w.meaning}</b></p><p>${w.exampleEn}</p><p class="translation">${w.exampleZh}</p></div><div><span class="tag">${w.category}</span></div></article>`).join(''):'<p class="study-note">没有找到匹配的词。</p>'}
+document.querySelectorAll('.tab').forEach(btn=>btn.addEventListener('click',()=>{document.querySelectorAll('.tab,.page').forEach(x=>x.classList.remove('active'));btn.classList.add('active');$(btn.dataset.page).classList.add('active');if(btn.dataset.page==='words')renderWords();}));
+$('startButton').addEventListener('click',start); $('showAnswer').addEventListener('click',reveal); document.querySelectorAll('[data-rating]').forEach(b=>b.addEventListener('click',()=>rate(b.dataset.rating)));
+$('dailyGoal').addEventListener('input',e=>{state.goal=+e.target.value;save();updateDashboard();}); ['searchInput','categoryFilter','levelFilter'].forEach(id=>$(id).addEventListener(id==='searchInput'?'input':'change',renderWords));
+$('studyMode').addEventListener('change',e=>{state.studyMode=e.target.value; save(); updateDashboard();});
+$('createSyncCode').addEventListener('click',()=>{state.syncCode=makeSyncCode();save();updateDashboard();pullProgress();});
+$('connectSync').addEventListener('click',()=>{const code=normalizedSyncCode($('syncCode').value);if(code.replace('-','').length<16){syncMessage='请输入至少 16 位的同步码';updateSyncUI();return;}state.syncCode=code;save();updateDashboard();pullProgress();});
+$('syncNow').addEventListener('click',pullProgress);
+$('speakButton').addEventListener('click',()=>{if(current&&'speechSynthesis'in window){speechSynthesis.cancel();speechSynthesis.speak(new SpeechSynthesisUtterance(current.word));}});
+$('speakExampleButton').addEventListener('click',()=>{if(current&&'speechSynthesis'in window){speechSynthesis.cancel();speechSynthesis.speak(new SpeechSynthesisUtterance(current.exampleEn));}});
+$('resetProgress').addEventListener('click',()=>{if(confirm('确定清除这台设备上的所有学习记录吗？词库不会删除。')){const syncCode=state.syncCode;state={...defaultState(),syncCode};save();updateDashboard();current=null;showCard(null);}});
+updateDashboard(); showCard(null); renderWords();
+if('serviceWorker' in navigator) window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));
+if(state.syncCode && syncReady()) pullProgress();

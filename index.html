@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#176b87" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <title>GED Vocabulary 学习器</title>
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="overrides.css" />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="apple-touch-icon" href="icon.svg" />
+</head>
+<body>
+  <main class="app-shell">
+    <header>
+      <div>
+        <p class="eyebrow">GED ENGLISH TRAINER</p>
+        <h1>GED Vocabulary <span>词汇学习器</span></h1>
+        <p class="intro">为 ESL 3–4 水平设计：理解词义、读懂语境、慢慢记牢。</p>
+      </div>
+      <button id="resetProgress" class="text-button" title="清除所有学习记录">重置记录</button>
+    </header>
+
+    <section class="dashboard" aria-label="学习概览">
+      <div class="goal-card">
+        <div class="goal-heading"><span>今日新词目标</span><strong id="goalNumber">10</strong></div>
+        <input id="dailyGoal" type="range" min="5" max="30" step="5" value="10" aria-label="今日新词目标" />
+        <div class="progress-track"><div id="goalProgress" class="progress-fill"></div></div>
+        <p id="goalText">今天已学习 0 / 10 个新词</p>
+      </div>
+      <div class="mini-stat"><span>待复习</span><strong id="dueCount">0</strong><small>先复习，再学新词</small></div>
+      <div class="mini-stat"><span>已掌握</span><strong id="masteredCount">0</strong><small>累计学习 0 个词</small></div>
+    </section>
+
+    <nav class="tabs" aria-label="页面">
+      <button class="tab active" data-page="learn">开始学习</button>
+      <button class="tab" data-page="words">查找词汇</button>
+      <button class="tab" data-page="progress">学习进度</button>
+    </nav>
+
+    <section id="learn" class="page active">
+      <div class="section-heading"><div><p class="eyebrow">FLASHCARD</p><h2 id="sessionTitle">准备开始</h2></div><p id="sessionHint">每次先想意思，再显示答案。</p></div>
+      <div class="study-mode" aria-label="新词推送方式">
+        <div><strong>新词推送方式</strong><p id="modeDescription">默认四科混合：RLA 5、Math 2、Science 2、Social Studies 1。</p></div>
+        <label for="studyMode" class="sr-only">选择新词推送方式</label>
+        <select id="studyMode">
+          <option value="mixed">四科混合（默认）</option>
+          <option value="RLA">专攻 RLA</option>
+          <option value="Math">专攻 Math</option>
+          <option value="Science">专攻 Science</option>
+          <option value="Social Studies">专攻 Social Studies</option>
+        </select>
+      </div>
+      <article id="flashcard" class="flashcard">
+        <div class="card-top"><span id="cardTag" class="tag">RLA</span><span id="cardDifficulty" class="difficulty">Level 1</span></div>
+        <div id="cardQuestion" class="card-question">
+          <h3 id="word">点击下方开始学习</h3>
+          <button id="speakButton" class="speaker" aria-label="朗读单词" disabled>🔊</button>
+          <p id="prompt" class="prompt">你知道这个词是什么意思吗？</p>
+        </div>
+        <div id="answer" class="answer hidden">
+          <p class="ipa" id="ipa"></p>
+          <p class="meaning" id="meaning"></p>
+          <div class="example"><div class="example-heading"><strong>GED 例句</strong><button id="speakExampleButton" class="example-speak" type="button" aria-label="朗读英文例句">🔊 朗读例句</button></div><p id="exampleEn"></p><p id="exampleZh" class="translation"></p></div>
+        </div>
+      </article>
+      <div class="learn-actions">
+        <button id="showAnswer" class="primary">显示答案</button>
+        <div id="ratingButtons" class="rating-buttons hidden">
+          <button class="rating forgot" data-rating="forgot"><b>不会</b><span>明天再见</span></button>
+          <button class="rating unsure" data-rating="unsure"><b>有点印象</b><span>几天后复习</span></button>
+          <button class="rating known" data-rating="known"><b>会了</b><span>更久后复习</span></button>
+        </div>
+        <button id="startButton" class="primary">开始今天的学习</button>
+      </div>
+      <p class="study-note">小提示：选择“会了”不代表永远不会出现；系统会在更长的间隔后帮你复习。</p>
+    </section>
+
+    <section id="words" class="page">
+      <div class="section-heading"><div><p class="eyebrow">WORD BANK</p><h2>查找词汇</h2></div><p id="wordBankCount"></p></div>
+      <div class="filters">
+        <label><span>搜索</span><input id="searchInput" type="search" placeholder="输入英文词或中文意思" /></label>
+        <label><span>分类</span><select id="categoryFilter"><option value="all">全部分类</option><option value="RLA">RLA 阅读与写作</option><option value="Math">Math 数学</option><option value="Science">Science 科学</option><option value="Social Studies">Social Studies 社会研究</option></select></label>
+        <label><span>难度</span><select id="levelFilter"><option value="all">全部等级</option><option value="1">Level 1</option><option value="2">Level 2</option><option value="3">Level 3</option></select></label>
+      </div>
+      <div id="wordList" class="word-list"></div>
+    </section>
+
+    <section id="progress" class="page">
+      <div class="section-heading"><div><p class="eyebrow">MY PROGRESS</p><h2>学习进度</h2></div><p>学习数据只保存在这台设备的浏览器中。</p></div>
+      <div class="stats-grid">
+        <div class="stat-card"><span>已接触词汇</span><strong id="learnedStat">0</strong><small>共 <span id="totalWords"></span> 个</small></div>
+        <div class="stat-card"><span>掌握比例</span><strong id="masteryRate">0%</strong><small>至少选过一次“会了”</small></div>
+        <div class="stat-card"><span>累计复习</span><strong id="reviewStat">0</strong><small>每一次回答都算一次练习</small></div>
+      </div>
+      <section class="category-progress"><h3>按分类学习</h3><div id="categoryProgress"></div></section>
+      <section class="sync-card">
+        <div class="sync-heading"><div><h3>跨设备同步</h3><p>在 Mac 生成同步码，再在 iPhone 输入同一串码；进度会在两台设备间合并。</p></div><span id="syncStatus" class="sync-status">离线保存中</span></div>
+        <div class="sync-controls"><label><span>同步码</span><input id="syncCode" type="text" autocapitalize="characters" autocomplete="off" placeholder="例如 GED-AB12CD34EF56" /></label><button id="createSyncCode" class="secondary" type="button">生成同步码</button><button id="connectSync" class="secondary" type="button">连接并同步</button><button id="syncNow" class="secondary" type="button">立即同步</button></div>
+        <p id="syncHelp" class="sync-help">尚未连接同步服务；学习记录仍安全保存在当前浏览器。</p>
+      </section>
+      <section class="how-it-works"><h3>复习如何安排？</h3><p>不会：明天复习；有点印象：约 3 天后复习；会了：约 4 天后复习。连续答对时，复习间隔会逐渐拉长。</p></section>
+    </section>
+  </main>
+  <script src="sync-config.js"></script>
+  <script src="vocabulary-full.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

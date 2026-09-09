@@ -1,0 +1,13 @@
+{
+  "name": "GED Vocabulary 学习器",
+  "short_name": "GED 词汇",
+  "description": "为中文 ESL 学习者准备的 GED 四科学习词库。",
+  "lang": "zh-CN",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#edf5f4",
+  "theme_color": "#176b87",
+  "icons": [
+    {"src":"icon.svg","sizes":"any","type":"image/svg+xml","purpose":"any maskable"}
+  ]
+}
