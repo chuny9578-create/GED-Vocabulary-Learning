@@ -87,7 +87,14 @@ function makeSyncCode(){
   const bytes=new Uint8Array(16); crypto.getRandomValues(bytes);
   return 'GED-'+Array.from(bytes, byte=>byte.toString(16).padStart(2,'0')).join('').toUpperCase();
 }
-function syncHeaders(){ return {apikey:SYNC_CONFIG.supabaseAnonKey, Authorization:`Bearer ${SYNC_CONFIG.supabaseAnonKey}`, 'Content-Type':'application/json', 'X-Sync-Key':state.syncCode}; }
+function syncHeaders(){
+  const key=SYNC_CONFIG.supabaseAnonKey;
+  const headers={apikey:key, 'Content-Type':'application/json', 'X-Sync-Key':state.syncCode};
+  // Supabase's current sb_publishable_* keys are opaque API keys, not JWTs.
+  // Legacy anon keys still require the older Bearer header for compatibility.
+  if(!String(key).startsWith('sb_')) headers.Authorization=`Bearer ${key}`;
+  return headers;
+}
 function syncEndpoint(){ return `${SYNC_CONFIG.supabaseUrl.replace(/\/$/,'')}/rest/v1/${encodeURIComponent(SYNC_TABLE)}`; }
 function updateSyncUI(){
   const ready=syncReady(), connected=Boolean(state.syncCode);
