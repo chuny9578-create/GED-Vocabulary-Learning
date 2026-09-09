@@ -1,8 +1,8 @@
-// Copy your Supabase project's public URL and anon key here after following
-// DEPLOY_AND_SYNC.md. The anon key is intentionally public; never use a
-// service-role key in a browser app.
+// This app uses Supabase's publishable browser key. It is intentionally public;
+// Row Level Security and the private sync code protect each learner's records.
+// Never use a service-role key in a browser app.
 window.GED_SYNC_CONFIG = {
-  supabaseUrl: '',
-  supabaseAnonKey: '',
+  supabaseUrl: 'https://bdyrfamrcmcnyirsibhl.supabase.co',
+  supabaseAnonKey: 'sb_publishable_eYJWyKNwGD6xCJZtelEHGg_cNhUPTuK',
   table: 'ged_vocabulary_progress'
 };
