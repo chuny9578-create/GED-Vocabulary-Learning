@@ -8,6 +8,12 @@ create table if not exists public.ged_vocabulary_progress (
 
 alter table public.ged_vocabulary_progress enable row level security;
 
+-- The browser uses Supabase's anonymous API role. These are the only table
+-- privileges it receives; the policies below still restrict every row to the
+-- request's private X-Sync-Key.
+grant usage on schema public to anon;
+grant select, insert, update on table public.ged_vocabulary_progress to anon;
+
 create policy "read own GED progress" on public.ged_vocabulary_progress
 for select to anon
 using (sync_key = coalesce(current_setting('request.headers', true)::json ->> 'x-sync-key', ''));
