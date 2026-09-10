@@ -65,6 +65,23 @@
 .syllables { margin: 0 0 14px; color: var(--teal); font-size: 1rem; font-weight: 800; letter-spacing: .04em; line-height: 1.35; }
 .word-row-syllables { margin: 0 0 5px; font-size: .78rem; font-weight: 700; letter-spacing: .025em; }
 
+.practice {
+  margin: -5px 0 20px;
+  padding: 16px;
+  border: 1px solid #c9e2df;
+  border-radius: 14px;
+  background: #f2f9f7;
+}
+
+.practice-label { margin: 0 0 6px; color: var(--teal); font-size: .76rem; font-weight: 800; letter-spacing: .08em; }
+.practice-prompt { margin: 0 0 11px; line-height: 1.55; font-weight: 700; }
+.practice-input { width: 100%; min-height: 47px; resize: vertical; padding: 10px 12px; line-height: 1.45; }
+.practice-actions { display: flex; align-items: center; gap: 8px; margin-top: 9px; }
+.practice-actions .text-button { font-size: .82rem; }
+.practice-feedback { min-height: 1.35em; margin: 10px 0 0; color: var(--muted); font-size: .87rem; line-height: 1.45; }
+.practice-feedback.correct { color: var(--green); font-weight: 700; }
+.practice-feedback.needs-work { color: var(--red); font-weight: 700; }
+
 @media (max-width: 760px) {
   .sync-controls { grid-template-columns: 1fr 1fr; }
   .sync-controls label { grid-column: 1 / -1; }
@@ -73,4 +90,5 @@
 @media (max-width: 650px) {
   .syllables { font-size: .94rem; margin-bottom: 12px; }
   .word-row-syllables { font-size: .76rem; }
+  .practice { padding: 14px; }
 }

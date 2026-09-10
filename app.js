@@ -75,15 +75,31 @@ const STORAGE_KEY = 'ged-vocabulary-progress-v1';
 const today = () => new Date().toISOString().slice(0,10);
 const defaultState = () => ({goal:10, records:{}, studiedByDay:{}, newSubjectsByDay:{}, reviews:0, studyMode:'mixed', syncCode:'', updatedAt:0});
 const load = () => { try { const saved = JSON.parse(localStorage.getItem(STORAGE_KEY)); return {...defaultState(), ...(saved || {}), records:saved?.records || {}, studiedByDay:saved?.studiedByDay || {}, newSubjectsByDay:saved?.newSubjectsByDay || {}}; } catch { return defaultState(); } };
-let state = load(), current = null, answerShown = false;
+let state = load(), current = null, currentTask = 'flashcard', answerShown = false;
 const $ = id => document.getElementById(id);
 const persistLocal = () => localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
 const save = () => { state.updatedAt=Date.now(); persistLocal(); scheduleSync(); };
-const datePlus = days => { const d = new Date(); d.setDate(d.getDate()+days); return d.toISOString().slice(0,10); };
 const learnedIds = () => Object.keys(state.records);
-const dueWords = () => WORDS.filter(w => state.records[w.id] && state.records[w.id].nextReview <= today());
 const todayNew = () => state.studiedByDay[today()] || 0;
-const intervals = {forgot:1, unsure:3, known:4};
+const MINUTE = 60 * 1000, DAY = 24 * 60 * MINUTE;
+// First-week intervals are anchored to the original learning session: 15 minutes,
+// then Day 1, 3, 7, 14, 30 and 60. Later stages use active production.
+const REVIEW_PLAN = [
+  {label:'当天巩固', wait:15*MINUTE, task:'flashcard'},
+  {label:'第 1 天复习', wait:DAY, task:'flashcard'},
+  {label:'第 3 天 · 拼写', wait:2*DAY, task:'spelling'},
+  {label:'第 7 天 · 例句填空', wait:4*DAY, task:'cloze'},
+  {label:'第 14 天 · 拼写', wait:7*DAY, task:'spelling'},
+  {label:'第 30 天 · 自己造句', wait:16*DAY, task:'sentence'},
+  {label:'第 60 天 · 自己造句', wait:30*DAY, task:'sentence'}
+];
+const reviewStep = record => Math.min(REVIEW_PLAN.length-1, Math.max(0, Number.isInteger(record?.reviewStep) ? record.reviewStep : Math.max(0, (record?.knownStreak || 0)-1)));
+const reviewAt = record => {
+  if(Number.isFinite(record?.nextReviewAt)) return record.nextReviewAt;
+  if(record?.nextReview){ const raw=String(record.nextReview), legacy = new Date(/^\d{4}-\d{2}-\d{2}$/.test(raw) ? `${raw}T00:00:00` : raw).getTime(); if(Number.isFinite(legacy)) return legacy; }
+  return 0;
+};
+const dueWords = () => WORDS.filter(w => state.records[w.id] && reviewAt(state.records[w.id]) <= Date.now());
 const MIXED_SEQUENCE = ['RLA','Math','RLA','Science','RLA','Math','RLA','Social Studies','RLA','Science'];
 const modeLabel = () => ({mixed:'四科混合', RLA:'专攻 RLA', Math:'专攻 Math', Science:'专攻 Science', 'Social Studies':'专攻 Social Studies'})[state.studyMode] || '四科混合';
 const activeMode = () => ['mixed','RLA','Math','Science','Social Studies'].includes(state.studyMode) ? state.studyMode : 'mixed';
@@ -180,27 +196,76 @@ function chooseNewWord(){
   return WORDS.filter(w=>!state.records[w.id]).sort((a,b)=>a.level-b.level||a.id-b.id)[0] || null;
 }
 function chooseNext(){
-  const due=dueWords(); if(due.length) return due.sort((a,b)=>state.records[a.id].nextReview.localeCompare(state.records[b.id].nextReview))[0];
+  const due=dueWords(); if(due.length) return due.sort((a,b)=>reviewAt(state.records[a.id])-reviewAt(state.records[b.id]))[0];
   if(todayNew()>=state.goal) return null;
   return chooseNewWord();
 }
+function escapeRegExp(value){ return value.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'); }
+function simpleEnglish(value){ return value.toLowerCase().replace(/[^a-z0-9]+/g,''); }
+function clozeSentence(word){
+  const blanked=word.exampleEn.replace(new RegExp(`\\b${escapeRegExp(word.word)}\\b`,'i'),'______');
+  return blanked===word.exampleEn ? `根据中文提示填入英文单词：${word.meaning}` : blanked;
+}
+function clearPractice(){
+  $('practice').classList.add('hidden'); $('practiceInput').value=''; $('practiceInput').rows=2;
+  $('practiceFeedback').textContent=''; $('practiceFeedback').className='practice-feedback';
+}
+function configurePractice(word, task, plan){
+  clearPractice();
+  if(task==='flashcard') return;
+  $('practice').classList.remove('hidden');
+  $('practiceLabel').textContent=task==='spelling' ? `SPELLING · ${plan.label}` : task==='cloze' ? `CONTEXT · ${plan.label}` : `MAKE A SENTENCE · ${plan.label}`;
+  $('practiceInputLabel').textContent=task==='sentence' ? '输入你的英文句子' : '输入英文单词';
+  if(task==='spelling'){
+    $('word').textContent='拼写练习'; $('syllables').textContent=plan.label; $('prompt').textContent='看中文提示，点击喇叭听发音后拼写英文单词。';
+    $('practicePrompt').textContent=`中文提示：${word.meaning}`; $('practiceInput').placeholder='输入英文单词'; $('practiceInput').rows=1; $('speakButton').disabled=false;
+  }else if(task==='cloze'){
+    $('word').textContent='例句填空'; $('syllables').textContent=plan.label; $('prompt').textContent='请把正确的英文单词填入空格。';
+    $('practicePrompt').textContent=clozeSentence(word); $('practiceInput').placeholder='输入英文单词'; $('practiceInput').rows=1; $('speakButton').disabled=true;
+  }else{
+    $('word').textContent=word.word; $('syllables').textContent=`${chunkLabel(word)} · ${plan.label}`; $('prompt').textContent='用这个词写一句简短英文句子；不自动判语法，但会保存你的练习。';
+    $('practicePrompt').textContent=`提示：${word.meaning}。尽量写 5–15 个英文词。`; $('practiceInput').placeholder=`例如：I can use ${word.word} in a sentence.`; $('practiceInput').rows=3; $('speakButton').disabled=false;
+  }
+}
 function showCard(word){
-  current=word; answerShown=false; $('answer').classList.add('hidden'); $('ratingButtons').classList.add('hidden'); $('showAnswer').classList.remove('hidden'); $('startButton').classList.add('hidden');
+  current=word; currentTask='flashcard'; answerShown=false; clearPractice(); $('answer').classList.add('hidden'); $('ratingButtons').classList.add('hidden'); $('showAnswer').classList.remove('hidden'); $('startButton').classList.add('hidden');
   if(!word){$('word').textContent=learnedIds().length===WORDS.length?'首批词库已全部学习！':'准备开始今天的学习'; $('syllables').textContent=''; $('prompt').textContent=dueWords().length?'有待复习的词，点击按钮开始巩固。':'每次先想意思，再显示答案。'; $('cardTag').textContent='GED'; $('cardDifficulty').textContent='学习模式'; $('speakButton').disabled=true; $('showAnswer').classList.add('hidden'); $('startButton').classList.remove('hidden'); $('startButton').textContent=dueWords().length?'开始复习':'开始今天的学习'; $('sessionTitle').textContent='准备开始'; return;}
-  $('word').textContent=word.word; $('syllables').textContent=chunkLabel(word); $('ipa').textContent=word.ipa; $('meaning').textContent=word.meaning; $('exampleEn').textContent=word.exampleEn; $('exampleZh').textContent=word.exampleZh; $('cardTag').textContent=word.category; $('cardDifficulty').textContent='Level '+word.level; $('speakButton').disabled=false;
-  const isDue=!!state.records[word.id] && state.records[word.id].nextReview<=today(); $('sessionTitle').textContent=isDue?'复习时间':'学习新词'; $('prompt').textContent='先想一想它的意思，再显示答案。';
+  const record=state.records[word.id], plan=record ? REVIEW_PLAN[reviewStep(record)] : null;
+  currentTask=plan?.task || 'flashcard';
+  $('word').textContent=word.word; $('syllables').textContent=chunkLabel(word); $('ipa').textContent=word.ipa; $('meaning').textContent=word.meaning; $('exampleEn').textContent=word.exampleEn; $('exampleZh').textContent=word.exampleZh; $('cardTag').textContent=word.category; $('cardDifficulty').textContent=plan?.label || 'Level '+word.level; $('speakButton').disabled=false;
+  const isDue=Boolean(record) && reviewAt(record)<=Date.now(); $('sessionTitle').textContent=isDue?`复习：${plan.label}`:'学习新词'; $('prompt').textContent='先想一想它的意思，再显示答案。';
+  configurePractice(word,currentTask,plan || REVIEW_PLAN[0]);
+  if(currentTask!=='flashcard') $('showAnswer').classList.add('hidden');
 }
 function start(){ showCard(chooseNext()); }
 function rate(rating){
-  if(!current) return; const old=state.records[current.id]; const isNew=!old; const knownStreak=rating==='known'?(old?.knownStreak||0)+1:0;
-  let days=intervals[rating]; if(rating==='known' && knownStreak>1) days=Math.min(60,4*Math.pow(2,knownStreak-1));
-  state.records[current.id]={nextReview:datePlus(days),knownCount:(old?.knownCount||0)+(rating==='known'?1:0),knownStreak, lastRating:rating,updatedAt:Date.now()};
+  if(!current) return;
+  const old=state.records[current.id], isNew=!old, oldStep=reviewStep(old); let nextStep=oldStep, wait=15*MINUTE, knownStreak=0;
+  if(rating==='known'){ nextStep=old ? Math.min(REVIEW_PLAN.length-1,oldStep+1) : 0; wait=REVIEW_PLAN[nextStep].wait; knownStreak=(old?.knownStreak||0)+1; }
+  if(rating==='unsure'){ nextStep=old ? oldStep : 0; wait=nextStep===0 ? 15*MINUTE : DAY; }
+  if(rating==='forgot'){ nextStep=0; wait=10*MINUTE; }
+  const nextReviewAt=Date.now()+wait, practiceSentence=currentTask==='sentence' ? $('practiceInput').value.trim() : old?.lastSentence;
+  state.records[current.id]={...old,nextReview:new Date(nextReviewAt).toISOString().slice(0,10),nextReviewAt,reviewStep:nextStep,knownCount:(old?.knownCount||0)+(rating==='known'?1:0),knownStreak,lastRating:rating,lastPractice:currentTask,lastSentence:practiceSentence || undefined,sentenceCount:(old?.sentenceCount||0)+(currentTask==='sentence' && practiceSentence ? 1 : 0),updatedAt:Date.now()};
   if(isNew){ state.studiedByDay[today()]=todayNew()+1; (state.newSubjectsByDay[today()] ||= []).push(current.category); } state.reviews=(state.reviews||0)+1; save(); updateDashboard(); showCard(chooseNext());
 }
 function reveal(){if(!current)return; answerShown=true; $('answer').classList.remove('hidden'); $('showAnswer').classList.add('hidden'); $('ratingButtons').classList.remove('hidden');}
+function checkPractice(){
+  if(!current || currentTask==='flashcard') return;
+  const value=$('practiceInput').value.trim(), feedback=$('practiceFeedback'); feedback.className='practice-feedback';
+  if(!value){ feedback.textContent='请先输入答案，或选择“显示参考答案”。'; feedback.classList.add('needs-work'); return; }
+  if(currentTask==='sentence'){
+    const enoughWords=value.split(/\s+/).filter(Boolean).length>=4, usesWord=simpleEnglish(value).includes(simpleEnglish(current.word));
+    feedback.textContent=enoughWords && usesWord ? '✅ 已保存这句练习。请参考下方 GED 例句，再选择掌握度。' : `请尽量写至少 4 个英文词，并包含 “${current.word}”。`;
+    feedback.classList.add(enoughWords && usesWord ? 'correct' : 'needs-work'); reveal(); return;
+  }
+  const correct=simpleEnglish(value)===simpleEnglish(current.word);
+  feedback.textContent=correct ? (currentTask==='spelling' ? '✅ 拼写正确！请看例句，再选择掌握度。' : '✅ 填空正确！请看例句，再选择掌握度。') : `参考答案：${current.word}。请看一遍并选择最符合的掌握度。`;
+  feedback.classList.add(correct ? 'correct' : 'needs-work'); reveal();
+}
 function renderWords(){const q=$('searchInput').value.trim().toLowerCase(), cat=$('categoryFilter').value, level=$('levelFilter').value; const list=WORDS.filter(w=>(!q||`${w.word} ${wordChunks(w)} ${w.meaning}`.toLowerCase().includes(q))&&(cat==='all'||w.category===cat)&&(level==='all'||w.level===+level)); $('wordList').innerHTML=list.length?list.map(w=>`<article class="word-row"><div><h3>${w.word}</h3><p class="syllables word-row-syllables">${chunkLabel(w)}</p><p class="ipa">${w.ipa}</p></div><div><p><b>${w.meaning}</b></p><p>${w.exampleEn}</p><p class="translation">${w.exampleZh}</p></div><div><span class="tag">${w.category}</span></div></article>`).join(''):'<p class="study-note">没有找到匹配的词。</p>'}
 document.querySelectorAll('.tab').forEach(btn=>btn.addEventListener('click',()=>{document.querySelectorAll('.tab,.page').forEach(x=>x.classList.remove('active'));btn.classList.add('active');$(btn.dataset.page).classList.add('active');if(btn.dataset.page==='words')renderWords();}));
-$('startButton').addEventListener('click',start); $('showAnswer').addEventListener('click',reveal); document.querySelectorAll('[data-rating]').forEach(b=>b.addEventListener('click',()=>rate(b.dataset.rating)));
+$('startButton').addEventListener('click',start); $('showAnswer').addEventListener('click',reveal); $('checkPractice').addEventListener('click',checkPractice); $('skipPractice').addEventListener('click',reveal); document.querySelectorAll('[data-rating]').forEach(b=>b.addEventListener('click',()=>rate(b.dataset.rating)));
+$('practiceInput').addEventListener('keydown',event=>{ if(event.key==='Enter' && !event.shiftKey && currentTask!=='sentence'){ event.preventDefault(); checkPractice(); } });
 $('dailyGoal').addEventListener('input',e=>{state.goal=+e.target.value;save();updateDashboard();}); ['searchInput','categoryFilter','levelFilter'].forEach(id=>$(id).addEventListener(id==='searchInput'?'input':'change',renderWords));
 $('studyMode').addEventListener('change',e=>{state.studyMode=e.target.value; save(); updateDashboard();});
 $('createSyncCode').addEventListener('click',()=>{state.syncCode=makeSyncCode();save();updateDashboard();pullProgress();});

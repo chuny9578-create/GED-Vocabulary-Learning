@@ -62,6 +62,14 @@
           <button id="speakButton" class="speaker" aria-label="朗读单词" disabled>🔊</button>
           <p id="prompt" class="prompt">你知道这个词是什么意思吗？</p>
         </div>
+        <section id="practice" class="practice hidden" aria-live="polite">
+          <p id="practiceLabel" class="practice-label"></p>
+          <p id="practicePrompt" class="practice-prompt"></p>
+          <label id="practiceInputLabel" class="sr-only" for="practiceInput">输入你的答案</label>
+          <textarea id="practiceInput" class="practice-input" rows="2" autocapitalize="none" autocomplete="off" spellcheck="false"></textarea>
+          <div class="practice-actions"><button id="checkPractice" class="secondary" type="button">检查答案</button><button id="skipPractice" class="text-button" type="button">显示参考答案</button></div>
+          <p id="practiceFeedback" class="practice-feedback" role="status"></p>
+        </section>
         <div id="answer" class="answer hidden">
           <p class="ipa" id="ipa"></p>
           <p class="meaning" id="meaning"></p>
@@ -71,13 +79,13 @@
       <div class="learn-actions">
         <button id="showAnswer" class="primary">显示答案</button>
         <div id="ratingButtons" class="rating-buttons hidden">
-          <button class="rating forgot" data-rating="forgot"><b>不会</b><span>明天再见</span></button>
-          <button class="rating unsure" data-rating="unsure"><b>有点印象</b><span>几天后复习</span></button>
-          <button class="rating known" data-rating="known"><b>会了</b><span>更久后复习</span></button>
+          <button class="rating forgot" data-rating="forgot"><b>不会</b><span>当天再练习</span></button>
+          <button class="rating unsure" data-rating="unsure"><b>有点印象</b><span>保留当前阶段</span></button>
+          <button class="rating known" data-rating="known"><b>会了</b><span>进入下一阶段</span></button>
         </div>
         <button id="startButton" class="primary">开始今天的学习</button>
       </div>
-      <p class="study-note">小提示：选择“会了”不代表永远不会出现；系统会在更长的间隔后帮你复习。</p>
+      <p class="study-note">小提示：先理解，再主动回忆；拼写与句子题会在后续复习阶段逐步出现。</p>
     </section>
 
     <section id="words" class="page">
@@ -103,7 +111,7 @@
         <div class="sync-controls"><label><span>同步码</span><input id="syncCode" type="text" autocapitalize="characters" autocomplete="off" placeholder="例如 GED-AB12CD34EF56" /></label><button id="createSyncCode" class="secondary" type="button">生成同步码</button><button id="connectSync" class="secondary" type="button">连接并同步</button><button id="syncNow" class="secondary" type="button">立即同步</button></div>
         <p id="syncHelp" class="sync-help">尚未连接同步服务；学习记录仍安全保存在当前浏览器。</p>
       </section>
-      <section class="how-it-works"><h3>复习如何安排？</h3><p>不会：明天复习；有点印象：约 3 天后复习；会了：约 4 天后复习。连续答对时，复习间隔会逐渐拉长。</p></section>
+      <section class="how-it-works"><h3>复习如何安排？</h3><p>会了会依次进入：学习后约 15 分钟、1 天、3 天、7 天、14 天、30 天、60 天。第 3 天开始加入拼写题，第 7 天加入例句填空，后期会邀请你自己造句。不会的词会在当天约 10 分钟后再次出现；有点印象则保留当前阶段，较快再练一次。</p></section>
     </section>
   </main>
   <script src="sync-config.js"></script>
