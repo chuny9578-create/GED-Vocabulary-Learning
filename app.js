@@ -66,7 +66,7 @@ const CORE_SYLLABLES = {
   evidence:'ev·i·dence', claim:'claim', analyze:'an·a·lyze', infer:'in·fer', relevant:'rel·e·vant', significant:'sig·nif·i·cant', establish:'es·tab·lish', contrast:'con·trast', perspective:'per·spec·tive', conclude:'con·clude', summarize:'sum·ma·rize', bias:'bi·as', illustrate:'il·lus·trate', consequence:'con·se·quence', interpret:'in·ter·pret', organism:'or·gan·ism', cell:'cell', variable:'var·i·a·ble', observe:'ob·serve', hypothesis:'hy·poth·e·sis', adapt:'a·dapt', process:'proc·ess', environment:'en·vi·ron·ment', energy:'en·er·gy', density:'den·si·ty', react:'re·act', structure:'struc·ture', evolve:'e·volve', factor:'fac·tor', data:'da·ta', democracy:'de·moc·ra·cy', citizen:'cit·i·zen', amendment:'a·mend·ment', economy:'e·con·o·my', resource:'re·source', prohibit:'pro·hib·it', legislation:'leg·is·la·tion', migrate:'mi·grate', conflict:'con·flict', policy:'pol·i·cy', income:'in·come', labor:'la·bor', participate:'par·tic·i·pate', impact:'im·pact', authority:'au·thor·i·ty', equation:'e·qua·tion'
 };
 function wordChunks(word){ return word.syllables || CORE_SYLLABLES[word.word.toLowerCase()] || word.word; }
-function chunkLabel(word){ const chunks=wordChunks(word); return chunks===word.word ? '单音节词' : `拼读分块：${chunks}`; }
+function chunkLabel(word){ const chunks=wordChunks(word); return chunks===word.word ? (/\s/.test(word.word) ? '短语：逐词朗读' : '单音节词') : `拼读分块：${chunks}`; }
 
 const SYNC_CONFIG = window.GED_SYNC_CONFIG || {};
 const SYNC_TABLE = SYNC_CONFIG.table || 'ged_vocabulary_progress';
