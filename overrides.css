@@ -61,7 +61,16 @@
 .secondary:disabled { opacity: .5; cursor: not-allowed; }
 .sync-help { margin-top: 12px; }
 
+/* Dictionary-style spelling chunks make longer English words easier to decode. */
+.syllables { margin: 0 0 14px; color: var(--teal); font-size: 1rem; font-weight: 800; letter-spacing: .04em; line-height: 1.35; }
+.word-row-syllables { margin: 0 0 5px; font-size: .78rem; font-weight: 700; letter-spacing: .025em; }
+
 @media (max-width: 760px) {
   .sync-controls { grid-template-columns: 1fr 1fr; }
   .sync-controls label { grid-column: 1 / -1; }
+}
+
+@media (max-width: 650px) {
+  .syllables { font-size: .94rem; margin-bottom: 12px; }
+  .word-row-syllables { font-size: .76rem; }
 }

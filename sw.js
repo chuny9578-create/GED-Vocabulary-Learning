@@ -1,4 +1,4 @@
-const CACHE_NAME = 'ged-vocabulary-pwa-v2';
+const CACHE_NAME = 'ged-vocabulary-pwa-v3';
 const APP_FILES = [
   './', './index.html', './styles.css', './overrides.css', './app.js',
   './vocabulary-full.js', './manifest.webmanifest', './icon.svg'

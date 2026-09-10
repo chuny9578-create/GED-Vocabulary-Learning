@@ -60,6 +60,14 @@ if (Array.isArray(window.GED_FULL_VOCABULARY)) {
   });
 }
 
+// Carefully checked chunks for the first cards. The expanded word bank carries
+// its own learner-friendly chunks in vocabulary-full.js.
+const CORE_SYLLABLES = {
+  evidence:'ev·i·dence', claim:'claim', analyze:'an·a·lyze', infer:'in·fer', relevant:'rel·e·vant', significant:'sig·nif·i·cant', establish:'es·tab·lish', contrast:'con·trast', perspective:'per·spec·tive', conclude:'con·clude', summarize:'sum·ma·rize', bias:'bi·as', illustrate:'il·lus·trate', consequence:'con·se·quence', interpret:'in·ter·pret', organism:'or·gan·ism', cell:'cell', variable:'var·i·a·ble', observe:'ob·serve', hypothesis:'hy·poth·e·sis', adapt:'a·dapt', process:'proc·ess', environment:'en·vi·ron·ment', energy:'en·er·gy', density:'den·si·ty', react:'re·act', structure:'struc·ture', evolve:'e·volve', factor:'fac·tor', data:'da·ta', democracy:'de·moc·ra·cy', citizen:'cit·i·zen', amendment:'a·mend·ment', economy:'e·con·o·my', resource:'re·source', prohibit:'pro·hib·it', legislation:'leg·is·la·tion', migrate:'mi·grate', conflict:'con·flict', policy:'pol·i·cy', income:'in·come', labor:'la·bor', participate:'par·tic·i·pate', impact:'im·pact', authority:'au·thor·i·ty', equation:'e·qua·tion'
+};
+function wordChunks(word){ return word.syllables || CORE_SYLLABLES[word.word.toLowerCase()] || word.word; }
+function chunkLabel(word){ const chunks=wordChunks(word); return chunks===word.word ? '单音节词' : `拼读分块：${chunks}`; }
+
 const SYNC_CONFIG = window.GED_SYNC_CONFIG || {};
 const SYNC_TABLE = SYNC_CONFIG.table || 'ged_vocabulary_progress';
 
@@ -178,8 +186,8 @@ function chooseNext(){
 }
 function showCard(word){
   current=word; answerShown=false; $('answer').classList.add('hidden'); $('ratingButtons').classList.add('hidden'); $('showAnswer').classList.remove('hidden'); $('startButton').classList.add('hidden');
-  if(!word){$('word').textContent=learnedIds().length===WORDS.length?'首批词库已全部学习！':'准备开始今天的学习'; $('prompt').textContent=dueWords().length?'有待复习的词，点击按钮开始巩固。':'每次先想意思，再显示答案。'; $('cardTag').textContent='GED'; $('cardDifficulty').textContent='学习模式'; $('speakButton').disabled=true; $('showAnswer').classList.add('hidden'); $('startButton').classList.remove('hidden'); $('startButton').textContent=dueWords().length?'开始复习':'开始今天的学习'; $('sessionTitle').textContent='准备开始'; return;}
-  $('word').textContent=word.word; $('ipa').textContent=word.ipa; $('meaning').textContent=word.meaning; $('exampleEn').textContent=word.exampleEn; $('exampleZh').textContent=word.exampleZh; $('cardTag').textContent=word.category; $('cardDifficulty').textContent='Level '+word.level; $('speakButton').disabled=false;
+  if(!word){$('word').textContent=learnedIds().length===WORDS.length?'首批词库已全部学习！':'准备开始今天的学习'; $('syllables').textContent=''; $('prompt').textContent=dueWords().length?'有待复习的词，点击按钮开始巩固。':'每次先想意思，再显示答案。'; $('cardTag').textContent='GED'; $('cardDifficulty').textContent='学习模式'; $('speakButton').disabled=true; $('showAnswer').classList.add('hidden'); $('startButton').classList.remove('hidden'); $('startButton').textContent=dueWords().length?'开始复习':'开始今天的学习'; $('sessionTitle').textContent='准备开始'; return;}
+  $('word').textContent=word.word; $('syllables').textContent=chunkLabel(word); $('ipa').textContent=word.ipa; $('meaning').textContent=word.meaning; $('exampleEn').textContent=word.exampleEn; $('exampleZh').textContent=word.exampleZh; $('cardTag').textContent=word.category; $('cardDifficulty').textContent='Level '+word.level; $('speakButton').disabled=false;
   const isDue=!!state.records[word.id] && state.records[word.id].nextReview<=today(); $('sessionTitle').textContent=isDue?'复习时间':'学习新词'; $('prompt').textContent='先想一想它的意思，再显示答案。';
 }
 function start(){ showCard(chooseNext()); }
@@ -190,7 +198,7 @@ function rate(rating){
   if(isNew){ state.studiedByDay[today()]=todayNew()+1; (state.newSubjectsByDay[today()] ||= []).push(current.category); } state.reviews=(state.reviews||0)+1; save(); updateDashboard(); showCard(chooseNext());
 }
 function reveal(){if(!current)return; answerShown=true; $('answer').classList.remove('hidden'); $('showAnswer').classList.add('hidden'); $('ratingButtons').classList.remove('hidden');}
-function renderWords(){const q=$('searchInput').value.trim().toLowerCase(), cat=$('categoryFilter').value, level=$('levelFilter').value; const list=WORDS.filter(w=>(!q||`${w.word} ${w.meaning}`.toLowerCase().includes(q))&&(cat==='all'||w.category===cat)&&(level==='all'||w.level===+level)); $('wordList').innerHTML=list.length?list.map(w=>`<article class="word-row"><div><h3>${w.word}</h3><p class="ipa">${w.ipa}</p></div><div><p><b>${w.meaning}</b></p><p>${w.exampleEn}</p><p class="translation">${w.exampleZh}</p></div><div><span class="tag">${w.category}</span></div></article>`).join(''):'<p class="study-note">没有找到匹配的词。</p>'}
+function renderWords(){const q=$('searchInput').value.trim().toLowerCase(), cat=$('categoryFilter').value, level=$('levelFilter').value; const list=WORDS.filter(w=>(!q||`${w.word} ${wordChunks(w)} ${w.meaning}`.toLowerCase().includes(q))&&(cat==='all'||w.category===cat)&&(level==='all'||w.level===+level)); $('wordList').innerHTML=list.length?list.map(w=>`<article class="word-row"><div><h3>${w.word}</h3><p class="syllables word-row-syllables">${chunkLabel(w)}</p><p class="ipa">${w.ipa}</p></div><div><p><b>${w.meaning}</b></p><p>${w.exampleEn}</p><p class="translation">${w.exampleZh}</p></div><div><span class="tag">${w.category}</span></div></article>`).join(''):'<p class="study-note">没有找到匹配的词。</p>'}
 document.querySelectorAll('.tab').forEach(btn=>btn.addEventListener('click',()=>{document.querySelectorAll('.tab,.page').forEach(x=>x.classList.remove('active'));btn.classList.add('active');$(btn.dataset.page).classList.add('active');if(btn.dataset.page==='words')renderWords();}));
 $('startButton').addEventListener('click',start); $('showAnswer').addEventListener('click',reveal); document.querySelectorAll('[data-rating]').forEach(b=>b.addEventListener('click',()=>rate(b.dataset.rating)));
 $('dailyGoal').addEventListener('input',e=>{state.goal=+e.target.value;save();updateDashboard();}); ['searchInput','categoryFilter','levelFilter'].forEach(id=>$(id).addEventListener(id==='searchInput'?'input':'change',renderWords));
