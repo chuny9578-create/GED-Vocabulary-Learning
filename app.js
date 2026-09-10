@@ -72,7 +72,8 @@ const SYNC_CONFIG = window.GED_SYNC_CONFIG || {};
 const SYNC_TABLE = SYNC_CONFIG.table || 'ged_vocabulary_progress';
 
 const STORAGE_KEY = 'ged-vocabulary-progress-v1';
-const today = () => new Date().toISOString().slice(0,10);
+const localDay = (date = new Date()) => `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`;
+const today = () => localDay();
 const defaultState = () => ({goal:10, records:{}, studiedByDay:{}, newSubjectsByDay:{}, reviews:0, studyMode:'mixed', syncCode:'', updatedAt:0});
 const load = () => { try { const saved = JSON.parse(localStorage.getItem(STORAGE_KEY)); return {...defaultState(), ...(saved || {}), records:saved?.records || {}, studiedByDay:saved?.studiedByDay || {}, newSubjectsByDay:saved?.newSubjectsByDay || {}}; } catch { return defaultState(); } };
 let state = load(), current = null, currentTask = 'flashcard', answerShown = false;
@@ -80,7 +81,9 @@ const $ = id => document.getElementById(id);
 const persistLocal = () => localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
 const save = () => { state.updatedAt=Date.now(); persistLocal(); scheduleSync(); };
 const learnedIds = () => Object.keys(state.records);
-const todayNew = () => state.studiedByDay[today()] || 0;
+// Preserve old UTC totals as history. Only timestamped new-word events count
+// toward the new local-day goal: old totals cannot be accurately re-dated.
+const todayNew = () => Object.values(state.records).filter(r => r.firstLearnedAt && localDay(new Date(r.firstLearnedAt)) === today()).length;
 const MINUTE = 60 * 1000, DAY = 24 * 60 * MINUTE;
 // First-week intervals are anchored to the original learning session: 15 minutes,
 // then Day 1, 3, 7, 14, 30 and 60. Later stages use active production.
@@ -103,7 +106,7 @@ const dueWords = () => WORDS.filter(w => state.records[w.id] && reviewAt(state.r
 const MIXED_SEQUENCE = ['RLA','Math','RLA','Science','RLA','Math','RLA','Social Studies','RLA','Science'];
 const modeLabel = () => ({mixed:'四科混合', RLA:'专攻 RLA', Math:'专攻 Math', Science:'专攻 Science', 'Social Studies':'专攻 Social Studies'})[state.studyMode] || '四科混合';
 const activeMode = () => ['mixed','RLA','Math','Science','Social Studies'].includes(state.studyMode) ? state.studyMode : 'mixed';
-let syncMessage = '', syncTimer;
+let syncMessage = '', syncTimer, syncInFlight = null, syncAgain = false;
 
 function syncReady(){ return Boolean(SYNC_CONFIG.supabaseUrl && SYNC_CONFIG.supabaseAnonKey); }
 function normalizedSyncCode(code){ return code.toUpperCase().replace(/[^A-Z0-9]/g,'').replace(/^(.{3})(.*)$/,'$1-$2'); }
@@ -122,7 +125,7 @@ function syncHeaders(){
 function syncEndpoint(){ return `${SYNC_CONFIG.supabaseUrl.replace(/\/$/,'')}/rest/v1/${encodeURIComponent(SYNC_TABLE)}`; }
 function updateSyncUI(){
   const ready=syncReady(), connected=Boolean(state.syncCode);
-  $('syncCode').value=state.syncCode || '';
+  if(document.activeElement !== $('syncCode')) $('syncCode').value=state.syncCode || '';
   $('connectSync').disabled=!ready; $('syncNow').disabled=!ready || !connected;
   $('syncStatus').textContent=syncMessage || (ready ? (connected ? '等待同步' : '需要同步码') : '离线保存中');
   $('syncHelp').textContent=ready ? (connected ? '进度会在每次学习后自动同步；你也可以随时点击“立即同步”。' : '首次使用：在一台设备生成同步码，再在另一台设备输入同一串码。') : '尚未连接同步服务；学习记录仍安全保存在当前浏览器。';
@@ -130,7 +133,11 @@ function updateSyncUI(){
 function recordWinner(localRecord, remoteRecord){
   if(!localRecord) return remoteRecord; if(!remoteRecord) return localRecord;
   const localTime=Number(localRecord.updatedAt || 0), remoteTime=Number(remoteRecord.updatedAt || 0);
-  if(localTime || remoteTime) return remoteTime > localTime ? remoteRecord : localRecord;
+  if(localTime || remoteTime) {
+    const winner = remoteTime > localTime ? remoteRecord : localRecord;
+    const first = [localRecord.firstLearnedAt, remoteRecord.firstLearnedAt].filter(n => Number.isFinite(n) && n > 0);
+    return {...winner, ...(first.length ? {firstLearnedAt:Math.min(...first)} : {})};
+  }
   if((remoteRecord.knownCount || 0) !== (localRecord.knownCount || 0)) return (remoteRecord.knownCount || 0) > (localRecord.knownCount || 0) ? remoteRecord : localRecord;
   return String(remoteRecord.nextReview || '') > String(localRecord.nextReview || '') ? remoteRecord : localRecord;
 }
@@ -149,27 +156,27 @@ function mergeProgress(local, remote){
 function syncPayload(){ const {syncCode,...payload}=state; return payload; }
 function scheduleSync(){
   if(!syncReady() || !state.syncCode) return;
-  clearTimeout(syncTimer); syncTimer=setTimeout(pushProgress,900);
-}
-async function pushProgress(){
-  if(!syncReady() || !state.syncCode) return;
-  try{
-    syncMessage='正在同步…'; updateSyncUI();
-    const response=await fetch(`${syncEndpoint()}?on_conflict=sync_key`,{method:'POST',headers:{...syncHeaders(),Prefer:'resolution=merge-duplicates,return=minimal'},body:JSON.stringify({sync_key:state.syncCode,payload:syncPayload(),updated_at:new Date().toISOString()})});
-    if(!response.ok) throw new Error(`同步失败 (${response.status})`);
-    syncMessage=`已同步 ${new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}`; updateSyncUI();
-  }catch(error){ syncMessage=error.message || '同步失败，请稍后重试'; updateSyncUI(); }
+  clearTimeout(syncTimer); syncTimer=setTimeout(pullProgress,900);
 }
 async function pullProgress(){
   if(!syncReady() || !state.syncCode) return;
+  if(syncInFlight){ syncAgain=true; return syncInFlight; }
+  const code=state.syncCode, headers=syncHeaders();
+  syncInFlight=(async()=>{
   try{
     syncMessage='正在读取进度…'; updateSyncUI();
-    const response=await fetch(`${syncEndpoint()}?sync_key=eq.${encodeURIComponent(state.syncCode)}&select=payload`,{headers:syncHeaders()});
+    const response=await fetch(`${syncEndpoint()}?sync_key=eq.${encodeURIComponent(code)}&select=payload`,{headers,cache:'no-store'});
     if(!response.ok) throw new Error(`读取失败 (${response.status})`);
     const rows=await response.json();
-    if(rows[0]?.payload){ state=mergeProgress(state,rows[0].payload); persistLocal(); updateDashboard(); }
-    await pushProgress();
-  }catch(error){ syncMessage=error.message || '同步失败，请稍后重试'; updateSyncUI(); }
+    if(state.syncCode!==code) return;
+    if(rows[0]?.payload){ state=mergeProgress(state,rows[0].payload); persistLocal(); updateDashboard(); if(!current) showCard(null); }
+    const result=await fetch(`${syncEndpoint()}?on_conflict=sync_key`,{method:'POST',headers:{...headers,Prefer:'resolution=merge-duplicates,return=minimal'},body:JSON.stringify({sync_key:code,payload:syncPayload(),updated_at:new Date().toISOString()})});
+    if(!result.ok) throw new Error(`同步失败 (${result.status})`);
+    if(state.syncCode===code) syncMessage=`已同步 ${new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}`;
+  }catch(error){ syncMessage=`${error.message || '连接失败'}；进度已保存在本机，联网后重试。`; }
+  finally { updateSyncUI(); }
+  })();
+  try { await syncInFlight; } finally { syncInFlight=null; if(syncAgain){syncAgain=false; scheduleSync();} }
 }
 
 function updateDashboard(){
@@ -186,8 +193,7 @@ function updateDashboard(){
 }
 function chooseNewWord(){
   const mode=activeMode(), sequence=mode==='mixed' ? MIXED_SEQUENCE : [mode];
-  const history=state.newSubjectsByDay[today()] || [];
-  const position=Math.max(history.length, todayNew());
+  const position=todayNew();
   for(let offset=0; offset<sequence.length; offset++){
     const category=sequence[(position+offset)%sequence.length];
     const candidate=WORDS.filter(w=>w.category===category&&!state.records[w.id]).sort((a,b)=>a.level-b.level||a.id-b.id)[0];
@@ -229,7 +235,14 @@ function configurePractice(word, task, plan){
 }
 function showCard(word){
   current=word; currentTask='flashcard'; answerShown=false; clearPractice(); $('answer').classList.add('hidden'); $('ratingButtons').classList.add('hidden'); $('showAnswer').classList.remove('hidden'); $('startButton').classList.add('hidden');
-  if(!word){$('word').textContent=learnedIds().length===WORDS.length?'首批词库已全部学习！':'准备开始今天的学习'; $('syllables').textContent=''; $('prompt').textContent=dueWords().length?'有待复习的词，点击按钮开始巩固。':'每次先想意思，再显示答案。'; $('cardTag').textContent='GED'; $('cardDifficulty').textContent='学习模式'; $('speakButton').disabled=true; $('showAnswer').classList.add('hidden'); $('startButton').classList.remove('hidden'); $('startButton').textContent=dueWords().length?'开始复习':'开始今天的学习'; $('sessionTitle').textContent='准备开始'; return;}
+  if(!word){
+    const due=dueWords().length, complete=todayNew()>=state.goal;
+    $('word').textContent=due?'有词汇等待复习':complete?'今日新词目标已完成':'准备开始今天的学习';
+    $('syllables').textContent='';
+    const upcoming=Object.values(state.records).map(reviewAt).filter(t=>t>Date.now()).sort((a,b)=>a-b)[0];
+    $('prompt').textContent=due?'点击下方按钮复习。':complete?'可以调高上方目标继续学新词。'+(upcoming?` 下次复习：${new Date(upcoming).toLocaleString()}`:''):'每日目标按本机当地日期计算。';
+    $('cardTag').textContent='GED'; $('cardDifficulty').textContent='学习模式'; $('speakButton').disabled=true; $('showAnswer').classList.add('hidden'); $('startButton').classList.remove('hidden'); $('startButton').textContent=due?'开始复习':complete?'检查待复习词':'开始今天的学习'; $('sessionTitle').textContent=complete?'今日学习进度':'准备开始'; return;
+  }
   const record=state.records[word.id], plan=record ? REVIEW_PLAN[reviewStep(record)] : null;
   currentTask=plan?.task || 'flashcard';
   $('word').textContent=word.word; $('syllables').textContent=chunkLabel(word); $('ipa').textContent=word.ipa; $('meaning').textContent=word.meaning; $('exampleEn').textContent=word.exampleEn; $('exampleZh').textContent=word.exampleZh; $('cardTag').textContent=word.category; $('cardDifficulty').textContent=plan?.label || 'Level '+word.level; $('speakButton').disabled=false;
@@ -239,14 +252,14 @@ function showCard(word){
 }
 function start(){ showCard(chooseNext()); }
 function rate(rating){
-  if(!current) return;
+  if(!current || !answerShown) return;
   const old=state.records[current.id], isNew=!old, oldStep=reviewStep(old); let nextStep=oldStep, wait=15*MINUTE, knownStreak=0;
   if(rating==='known'){ nextStep=old ? Math.min(REVIEW_PLAN.length-1,oldStep+1) : 0; wait=REVIEW_PLAN[nextStep].wait; knownStreak=(old?.knownStreak||0)+1; }
   if(rating==='unsure'){ nextStep=old ? oldStep : 0; wait=nextStep===0 ? 15*MINUTE : DAY; }
   if(rating==='forgot'){ nextStep=0; wait=10*MINUTE; }
   const nextReviewAt=Date.now()+wait, practiceSentence=currentTask==='sentence' ? $('practiceInput').value.trim() : old?.lastSentence;
-  state.records[current.id]={...old,nextReview:new Date(nextReviewAt).toISOString().slice(0,10),nextReviewAt,reviewStep:nextStep,knownCount:(old?.knownCount||0)+(rating==='known'?1:0),knownStreak,lastRating:rating,lastPractice:currentTask,lastSentence:practiceSentence || undefined,sentenceCount:(old?.sentenceCount||0)+(currentTask==='sentence' && practiceSentence ? 1 : 0),updatedAt:Date.now()};
-  if(isNew){ state.studiedByDay[today()]=todayNew()+1; (state.newSubjectsByDay[today()] ||= []).push(current.category); } state.reviews=(state.reviews||0)+1; save(); updateDashboard(); showCard(chooseNext());
+  state.records[current.id]={...old,firstLearnedAt:isNew ? Date.now() : old.firstLearnedAt,nextReview:new Date(nextReviewAt).toISOString().slice(0,10),nextReviewAt,reviewStep:nextStep,knownCount:(old?.knownCount||0)+(rating==='known'?1:0),knownStreak,lastRating:rating,lastPractice:currentTask,lastSentence:practiceSentence || undefined,sentenceCount:(old?.sentenceCount||0)+(currentTask==='sentence' && practiceSentence ? 1 : 0),updatedAt:Date.now()};
+  if(isNew){ state.studiedByDay[today()]=todayNew(); (state.newSubjectsByDay[today()] ||= []).push(current.category); } state.reviews=(state.reviews||0)+1; save(); updateDashboard(); showCard(chooseNext());
 }
 function reveal(){if(!current)return; answerShown=true; $('answer').classList.remove('hidden'); $('showAnswer').classList.add('hidden'); $('ratingButtons').classList.remove('hidden');}
 function checkPractice(){
@@ -268,7 +281,7 @@ $('startButton').addEventListener('click',start); $('showAnswer').addEventListen
 $('practiceInput').addEventListener('keydown',event=>{ if(event.key==='Enter' && !event.shiftKey && currentTask!=='sentence'){ event.preventDefault(); checkPractice(); } });
 $('dailyGoal').addEventListener('input',e=>{state.goal=+e.target.value;save();updateDashboard();}); ['searchInput','categoryFilter','levelFilter'].forEach(id=>$(id).addEventListener(id==='searchInput'?'input':'change',renderWords));
 $('studyMode').addEventListener('change',e=>{state.studyMode=e.target.value; save(); updateDashboard();});
-$('createSyncCode').addEventListener('click',()=>{state.syncCode=makeSyncCode();save();updateDashboard();pullProgress();});
+$('createSyncCode').addEventListener('click',()=>{if(state.syncCode){syncMessage='已有同步码，请在另一台设备输入同一码。';updateSyncUI();return;}state.syncCode=makeSyncCode();save();updateSyncUI();pullProgress();});
 $('connectSync').addEventListener('click',()=>{const code=normalizedSyncCode($('syncCode').value);if(code.replace('-','').length<16){syncMessage='请输入至少 16 位的同步码';updateSyncUI();return;}state.syncCode=code;save();updateDashboard();pullProgress();});
 $('syncNow').addEventListener('click',pullProgress);
 $('speakButton').addEventListener('click',()=>{if(current&&'speechSynthesis'in window){speechSynthesis.cancel();speechSynthesis.speak(new SpeechSynthesisUtterance(current.word));}});
@@ -277,3 +290,9 @@ $('resetProgress').addEventListener('click',()=>{if(confirm('确定清除这台�
 updateDashboard(); showCard(null); renderWords();
 if('serviceWorker' in navigator) window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));
 if(state.syncCode && syncReady()) pullProgress();
+function refreshSession(){ updateDashboard(); if(!current) showCard(null); }
+window.addEventListener('focus',()=>{refreshSession(); pullProgress();});
+window.addEventListener('online',()=>pullProgress());
+document.addEventListener('visibilitychange',()=>{if(!document.hidden){refreshSession(); pullProgress();}});
+setInterval(()=>{if(!document.hidden){refreshSession();}},30000);
+setInterval(()=>{if(!document.hidden && state.syncCode) pullProgress();},60000);
